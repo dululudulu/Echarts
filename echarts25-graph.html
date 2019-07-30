@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+    <script src="./js/echarts.js"></script>
+</head>
+
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 600px;height:1000px;"></div>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+        myChart.showLoading();
+        // 对option的配置
+        // (function(){...}())相当于是定义了一个匿名函数同时执行了一次 给setData这份变量赋值
+        // 因为return的结果是function所以本质上来讲setData是一个函数
+        var setData = (function () {
+            // 指定图表的配置项和数据
+            var option = {
+
+                title: {
+                    text: '最近上映电影',
+                    left: '50%',
+                    textAlign: 'center'
+                },
+                grid: {
+                    left: 0,
+                    right: 20,
+                    bottom: 100,
+                    top: 30
+                },
+                tooltip: {
+                    formatter: function (params) {
+                        // console.log(params);
+                        if (params.componentSubType == 'pictorialBar') {
+                            return '电影：' + params.data.name + '<br />评分：' + params.data.value
+                        }
+                    }
+                },
+                xAxis: {
+                    data: []
+                },
+                yAxis: {
+                    splitLine: {
+                        show: false
+                    },
+                    axisLine: {
+                        show: false
+                    }
+                },
+                series: [
+                    {
+                        type: 'bar',
+                        barWidth: 1,
+                        data: [],
+                        animationDelay: idx => {
+                            return idx * 100
+                        }
+                    },
+                    {
+                        type: 'pictorialBar',
+                        symbolPosition: 'end',
+                        symbolRotate: 165,
+                        symbolOffset: ['20%', '100%'],
+                        data: [],
+                        animationDelay: idx => {
+                            return idx * 100 + 500
+                        }
+                    },
+                    {
+                        type: 'graph',
+                        data: [{
+                            x: 0,
+                            y: 0,
+                            symbolSize: 0
+                        },
+                        {
+                            name: 'btn',
+                            x: 0,
+                            y: 10,
+                            symbolSize: 30
+                        }
+                        ],
+                        itemStyle: {
+                            normal: {
+                                color: 'transparent',
+                                borderWidth: 1,
+                                borderColor: '#555'
+                            }
+                        }
+                    }
+                ]
+            };
+            var mark = 1;
+            return function () {
+                var pics = [];
+                var d = JSON.parse(localStorage.getItem('data'));
+                console.log(d);
+                for (var i = 0; i < d.length; i++) {
+                    var img = d[i].thumbnailUrl;
+                    pics.push({
+                        value: ((d[i].id)),
+                        symbol: 'image://' + img,
+                        name: d[i].title
+                    })
+                }
+                if (mark % 2 == 0) {
+                    pics.sort(function (a, b) {
+                        return (mark / 2 | 0) % 2 == 0 ? (b.value - a.value) : (a.value - b.value)
+                    })
+                }
+                option.series[0].data = pics;
+                option.series[1].data = pics;
+                myChart.hideLoading();
+                myChart.setOption(option);
+                mark++;
+            }
+        })();//匿名函数
+        // 如果本地缓存中有data数据就调用setData()方法
+        // 找不到data数据就异步请求并加载数据并将获取到的数据缓存到本地存储中
+        if (localStorage.getItem('data')) {
+            setData()
+        } else {
+            $.ajax({
+                url: 'http://jsonplaceholder.typicode.com/photos',
+                type: 'GET',
+                // 设置跨域请求
+                dataType: 'jsonp',
+                success: function (d) {
+                    localStorage.data = JSON.stringify(d);
+                    console.log(localStorage.data);
+                    setData();
+                }
+            })
+        }
+        // e[object Object] undefined undefined 
+        // bug 待解决
+        myChart.on('click', function (e, i, k) {
+            console.log('e' + e, i, k);
+            if (e.name == 'btn') {
+                // setData();
+            } else {
+                // window.open(e.data.url)
+            }
+        })
+    </script>
+</body>
+
+</html>

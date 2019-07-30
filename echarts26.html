@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+    <script src="./js/jquery.js"></script>
+    <script src="./js/echarts.js"></script>
+</head>
+
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 600px;height:500px;"></div>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+        // 指定图表的配置项和数据
+        myChart.setOption({
+            title: {
+                text: 'Graph 简单示例'
+            },
+            tooltip: {},
+            animationDurationUpdate: 1500,
+            animationEasingUpdate: 'quinticInOut',
+            series: [{
+                type: 'graph',
+                layout: 'none',
+                symbolSize: 80,
+                roam: true,
+                label: {
+                    normal: {
+                        show: true,
+                        formatter: function (val) {
+                            var strs = val.name.split('') //字符串数组
+                            var str = ''
+                            for (var i = 0, s; s = strs[i++];) { //遍历字符串数组
+                                str += s
+                                if (!(i % 6)) str += '\n' //按需要求余
+                            }
+                            return `${str}`
+                        }, 
+
+                    }
+                },
+                edgeSymbol: ['circle', 'arrow'],
+                edgeSymbolSize: [4, 10],
+                edgeLabel: {
+                    normal: {
+                        show: true,
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    }
+                },
+                data: [],
+                // links: [],
+                links: [],
+                lineStyle: {
+                    normal: {
+                        opacity: 0.9,
+                        width: 2,
+                        curveness: 0
+                    }
+                }
+            }]
+        });
+        $.get('./data/data03.json').done(function (data) {
+            console.log(data.nodes);
+            myChart.setOption({
+                series: [{
+                    name: data.nodes.map(function (item, index) {
+                        // console.log(item.name, index);
+                        return item.name
+                    }),
+                    edgeLabel: {
+                        normal: {
+                            formatter: function (params) {
+                                console.log(params);
+                            }
+                        }
+                    },
+                    data: data.nodes,
+                    links: data.nodes.map(function (item, index) {
+                        return {
+                            source: index,
+                            target: index + 1
+                        }
+                    })
+                }]
+            })
+        })
+    </script>
+</body>
+
+</html>
